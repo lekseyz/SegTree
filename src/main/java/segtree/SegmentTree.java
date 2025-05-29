@@ -1,5 +1,7 @@
 package segtree;
 
+import java.util.Objects;
+
 public class SegmentTree<T, U> {
     private final int size;
     private final T[] tree;
@@ -7,7 +9,6 @@ public class SegmentTree<T, U> {
     private final Aggregator<T> aggregator;
     private final Updater<T, U> updater;
     private final T identityT;
-    private final U identityU;
 
     public SegmentTree(T[] data, Aggregator<T> aggregator, Updater<T, U> updater, T identityT, U identityU) {
         this.size = data.length;
@@ -16,12 +17,11 @@ public class SegmentTree<T, U> {
         this.aggregator = aggregator;
         this.updater = updater;
         this.identityT = identityT;
-        this.identityU = identityU;
         build(1, 0, size - 1, data);
     }
 
     private void build(int node, int left, int right, T[] data) {
-        lazy[node] = identityU;
+        lazy[node] = null;
         if (left == right) {
             tree[node] = data[left];
         } else {
@@ -37,13 +37,13 @@ public class SegmentTree<T, U> {
     }
 
     private void push(int node, int left, int right) {
-        if (!lazy[node].equals(identityU)) {
+        if (!Objects.isNull(lazy[node])) {
             tree[node] = updater.apply(tree[node], lazy[node], right - left + 1);
             if (left != right) {
                 lazy[2 * node] = updater.compose(lazy[2 * node], lazy[node]);
                 lazy[2 * node + 1] = updater.compose(lazy[2 * node + 1], lazy[node]);
             }
-            lazy[node] = identityU;
+            lazy[node] = null;
         }
     }
 
@@ -58,6 +58,9 @@ public class SegmentTree<T, U> {
         int mid = (left + right) / 2;
         update(2 * node, left, mid, l, r, value);
         update(2 * node + 1, mid + 1, right, l, r, value);
+
+        push(2 * node,     left,        mid);
+        push(2 * node + 1, mid + 1, right);
         tree[node] = aggregator.aggregate(tree[2 * node], tree[2 * node + 1]);
     }
 
