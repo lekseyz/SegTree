@@ -202,4 +202,30 @@ public class MinPlusAssignTest {
         assertEquals(plainSt.query(0, 1000-1), st.query(0, 1000-1));
         assertEquals(plainSt.query(500, 500), st.query(500, 500));
     }
+
+    @Test
+    void testStressRandomTestAdditions() {
+        Random rd = new Random(42);
+        Long[] arr = LongStream.generate(rd::nextLong).limit(1000).boxed().toArray(Long[]::new);
+
+        SegmentTree<Long, Long> st = new SegmentTree<>(arr, MinAgg, AsgUpd, Long.MAX_VALUE, null);
+        segtree.testUtils.PlainArrSeg<Long, Long> plainSt = new segtree.testUtils.PlainArrSeg<>(arr, MinAgg, AsgUpd, Long.MAX_VALUE, null);
+
+        for (int i = 0; i < 10_000; i++) {
+            int l = rd.nextInt(1000);
+            int r = rd.nextInt(1000);
+            if (l > r) { int tmp = l; l = r; r = tmp; }
+            long delta = rd.nextLong() % 50;
+
+            st.update(l, r, delta);
+            plainSt.update(l, r, delta);
+
+            l = rd.nextInt(1000);
+            r = rd.nextInt(1000);
+            if (l > r) { int tmp = l; l = r; r = tmp; }
+            delta = rd.nextLong() % 50;
+
+            assertEquals(plainSt.query(l, r), st.query(l, r));
+        }
+    }
 }
